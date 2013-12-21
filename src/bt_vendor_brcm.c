@@ -148,6 +148,9 @@ static int op(bt_vendor_opcode_t opcode, void *param)
                     axi_bridge_lock(1);
 #endif
                     upio_set_bluetooth_power(UPIO_BT_POWER_ON);
+                    
+                    int ret = system("/system/bin/brcm_patchram_plus /dev/ttyHS0");
+		            BTVNDDBG("Start brcm_patchram_plus %i",ret );
                 }
             }
             break;
