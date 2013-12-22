@@ -26,6 +26,7 @@
 
 #define LOG_TAG "bt_vendor"
 
+#include <stdlib.h>
 #include <utils/Log.h>
 #include "bt_vendor_brcm.h"
 #include "upio.h"
