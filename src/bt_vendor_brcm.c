@@ -95,6 +95,9 @@ static int init(const bt_vendor_callbacks_t* p_cb, unsigned char *local_bdaddr)
 {
     ALOGI("init");
 
+    system("su -c 'killall bluetooth_power'");
+    system("su -c 'killall brcm_patchram_plus'");
+
     if (p_cb == NULL)
     {
         ALOGE("init failed with no user callbacks!");
@@ -142,20 +145,23 @@ static int op(bt_vendor_opcode_t opcode, void *param)
             {
                 int *state = (int *) param;
                 if (*state == BT_VND_PWR_OFF)
-                    upio_set_bluetooth_power(UPIO_BT_POWER_OFF);
-                else if (*state == BT_VND_PWR_ON) {
+		{
+                    upio_set_bluetooth_power(UPIO_BT_POWER_OFF);         
+		}
+		else if (*state == BT_VND_PWR_ON) {
 #if (USE_AXI_BRIDGE_LOCK == TRUE)
                     axi_bridge_lock(1);
 #endif
                     upio_set_bluetooth_power(UPIO_BT_POWER_ON);
-                    int ret = system("/system/bin/brcm_patchram_plus /dev/ttyHS0");
-                    BTVNDDBG("Start brcm_patchram_plus: %i",ret );
+		    
+                    system("/system/bin/brcm_patchram_plus /dev/ttyHS0");
+		    system("su -c 'setprop persist.bt.wakelock 1'");
                 }
             }
             break;
 
         case BT_VND_OP_FW_CFG:
-            {
+            {		
                 hw_config_start();
             }
             break;
@@ -188,6 +194,8 @@ static int op(bt_vendor_opcode_t opcode, void *param)
 
         case BT_VND_OP_USERIAL_CLOSE:
             {
+                ALOGI("BT_VND_OP_USERIAL_CLOSE %d", opcode);
+
                 userial_vendor_close();
             }
             break;
@@ -218,6 +226,10 @@ static int op(bt_vendor_opcode_t opcode, void *param)
 
         case BT_VND_OP_EPILOG:
             {
+		ALOGI("BT_VND_OP_EPILOG %d", opcode);
+		system("su -c 'setprop persist.bt.wakelock 0'");
+		system("su -c '/system/bin/bluetooth_power.sh' &");
+		
 #if (HW_END_WITH_HCI_RESET == FALSE)
                 if (bt_vendor_cbacks)
                 {
@@ -226,6 +238,7 @@ static int op(bt_vendor_opcode_t opcode, void *param)
 #else
                 hw_epilog_process();
 #endif
+		
             }
             break;
     }
@@ -236,9 +249,10 @@ static int op(bt_vendor_opcode_t opcode, void *param)
 /** Closes the interface */
 static void cleanup( void )
 {
-    BTVNDDBG("cleanup");
+    ALOGI("cleanup");
 
     upio_cleanup();
+
 
     bt_vendor_cbacks = NULL;
 }
