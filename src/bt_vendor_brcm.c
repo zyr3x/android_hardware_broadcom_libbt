@@ -156,7 +156,6 @@ static int op(bt_vendor_opcode_t opcode, void *param)
                     upio_set_bluetooth_power(UPIO_BT_POWER_ON);
 		    
                     system("/system/bin/brcm_patchram_plus /dev/ttyHS0");
-		    property_set("persist.bt.wakelock", "1");
                 }
             }
             break;
@@ -228,8 +227,7 @@ static int op(bt_vendor_opcode_t opcode, void *param)
         case BT_VND_OP_EPILOG:
             {
 		ALOGI("BT_VND_OP_EPILOG %d", opcode);
-		property_set("persist.bt.wakelock", "0");
-		
+
 #if (HW_END_WITH_HCI_RESET == FALSE)
                 if (bt_vendor_cbacks)
                 {
