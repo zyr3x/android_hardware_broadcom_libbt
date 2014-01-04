@@ -27,6 +27,7 @@
 #define LOG_TAG "bt_vendor"
 #include <stdlib.h>
 #include <utils/Log.h>
+#include <cutils/properties.h>
 #include "bt_vendor_brcm.h"
 #include "upio.h"
 #include "userial_vendor.h"
@@ -95,8 +96,8 @@ static int init(const bt_vendor_callbacks_t* p_cb, unsigned char *local_bdaddr)
 {
     ALOGI("init");
 
-    system("su -c 'killall bluetooth_power'");
-    system("su -c 'killall brcm_patchram_plus'");
+    //system("su -c 'killall bluetooth_power'");
+   //system("su -c 'killall brcm_patchram_plus'");
 
     if (p_cb == NULL)
     {
@@ -136,7 +137,7 @@ static int init(const bt_vendor_callbacks_t* p_cb, unsigned char *local_bdaddr)
 static int op(bt_vendor_opcode_t opcode, void *param)
 {
     int retval = 0;
-
+        
     BTVNDDBG("op for %d", opcode);
 
     switch(opcode)
@@ -155,7 +156,7 @@ static int op(bt_vendor_opcode_t opcode, void *param)
                     upio_set_bluetooth_power(UPIO_BT_POWER_ON);
 		    
                     system("/system/bin/brcm_patchram_plus /dev/ttyHS0");
-		    system("su -c 'setprop persist.bt.wakelock 1'");
+		    property_set("persist.bt.wakelock", "1");
                 }
             }
             break;
@@ -227,8 +228,7 @@ static int op(bt_vendor_opcode_t opcode, void *param)
         case BT_VND_OP_EPILOG:
             {
 		ALOGI("BT_VND_OP_EPILOG %d", opcode);
-		system("su -c 'setprop persist.bt.wakelock 0'");
-		system("su -c '/system/bin/bluetooth_power.sh' &");
+		property_set("persist.bt.wakelock", "0");
 		
 #if (HW_END_WITH_HCI_RESET == FALSE)
                 if (bt_vendor_cbacks)
